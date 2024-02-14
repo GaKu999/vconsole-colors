@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# vim:ft=bash:noet:ts=3:sw=3:
+
+## Who am I?
+_SELF="${0##*/}"
+
+## $1: exit code (defaults to 0)
+## $2: unknown option
+_usage() {
+	local __usage_text
+	local __exit_code="${1:-0}"
+	local __unknown_option="$2"
+
+	IFS='' read -r -d '' __usage_text <<ENDUSAGETEXT
+Usage: $_SELF [OPERATION]
+	get*
+	parse
+	set [CONSOLE]
+ENDUSAGETEXT
+
+	[[ -n "$__unknown_option" ]] &&
+		echo "$_SELF: invalid option -- '$__unknown_option'" >&2
+	printf "%s" "$__usage_text"
+	exit "$__exit_code"
+}
+
+## $1: base16 value
+_hex2dec() {
+	local __hex_value="$1"
+	printf "%d" "0x$__hex_value"
+}
+
+## $1: base10 value
+_dec2hex() {
+	local __dec_value="$1"
+	printf "%.2x" "$__dec_value"
+}
+
+## get the current color variables
+_get() {
+	local __i \
+		__c0  __c1  __c2  __c3  __cl0  __cl1  __cl2  __cl3  \
+		__c4  __c5  __c6  __c7  __cl4  __cl5  __cl6  __cl7  \
+		__c8  __c9  __c10 __c11 __cl8  __cl9  __cl10 __cl11 \
+		__c12 __c13 __c14 __c15 __cl12 __cl13 __cl14 __cl15 \
+
+	local __color
+	for __color in red grn blu
+	do
+		IFS=',' read -r __c0 __c1 __c2 __c3 __c4 __c5 __c6 __c7 __c8 __c9 __c10 __c11 __c12 __c13 __c14 __c15 <"/sys/module/vt/parameters/default_$__color"
+		for ((__i=0; __i <= 15; __i++))
+		do eval "__cl$__i=\"\${__cl$__i:-\$(_dec2hex \${__c$__i})}\${__cl$__i:+,\$(_dec2hex \${__c$__i})}\""
+		done
+	done
+
+	for ((__i=0; __i <= 15; __i++))
+	do eval "echo COLOR_$__i=\"\${__cl$__i}\""
+	done
+}
+
+## parse /etc/vconsole.conf into vtrgb
+_parse() {
+	local __i __r __g __b __red __grn __blu
+
+	[[ -s /etc/vconsole.conf ]] && . /etc/vconsole.conf
+	COLOR_0="${COLOR_0:-00,00,00}"   COLOR_1="${COLOR_1:-aa,00,00}"
+	COLOR_2="${COLOR_2:-00,aa,00}"   COLOR_3="${COLOR_3:-aa,55,00}"
+	COLOR_4="${COLOR_4:-00,00,aa}"   COLOR_5="${COLOR_5:-aa,00,aa}"
+	COLOR_6="${COLOR_6:-00,aa,aa}"   COLOR_7="${COLOR_7:-aa,aa,aa}"
+	COLOR_8="${COLOR_8:-55,55,55}"   COLOR_9="${COLOR_9:-ff,55,55}"
+	COLOR_10="${COLOR_10:-55,ff,55}" COLOR_11="${COLOR_11:-ff,ff,55}"
+	COLOR_12="${COLOR_12:-55,55,ff}" COLOR_13="${COLOR_13:-ff,55,ff}"
+	COLOR_14="${COLOR_14:-55,ff,ff}" COLOR_15="${COLOR_15:-ff,ff,ff}"
+
+	for ((__i=0; __i <= 15; __i++))
+	do
+		while IFS=',' read -r __r __g __b
+		do eval \
+				"__red=\${__red:-$(_hex2dec "$__r")}\${__red:+,$(_hex2dec "$__r")}" \
+				"__grn=\${__grn:-$(_hex2dec "$__g")}\${__grn:+,$(_hex2dec "$__g")}" \
+				"__blu=\${__blu:-$(_hex2dec "$__b")}\${__blu:+,$(_hex2dec "$__b")}"
+		done < <(eval "echo \"\$COLOR_$__i\"")
+	done
+	printf "%s\n" "$__red" "$__grn" "$__blu"
+}
+
+## set the console colors
+## $1: target tty
+_set() {
+	((EUID)) && {
+		echo "$_SELF: requires root privileges" >&2
+		exit 4
+	}
+	local __target_tty="$1"
+	_parse | setvtrgb -C"$__target_tty" -
+}
+
+## $1: mode of operation (defaults to get)
+## $2: target tty for 'set' (defaults to current tty)
+_main() {
+	local __mode="$1"
+	local __target_tty="${2:-$(tty)}"
+	case "$__mode" in
+	''|get) _get ;;
+	parse) _parse ;;
+	set) _set "$__target_tty" ;;
+	*)
+		echo "$_SELF: invalid mode of operation -- '$__mode'" >&2
+		_usage 2
+	;;
+	esac
+}
+
+## parse the options
+while true
+do
+	case "$1" in
+	-h|--help|--usage) _usage ;;
+	-*|--*) _usage 2 "$1" ;;
+	--) shift; break ;;
+	*) break ;;
+	esac
+done
+
+_main "$@"

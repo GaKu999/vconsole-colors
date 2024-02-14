@@ -1,0 +1,44 @@
+# vim:ft=systemd
+
+[Unit]
+Description=Virtual Console Colors Setup
+
+ConditionPathExists=/consolecolors.vtrgb
+ConditionPathExists=/dev/tty0
+
+DefaultDependencies=no
+Before=basic.target
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/bin/setvtrgb -C/dev/tty0 /consolecolors.vtrgb
+
+LockPersonality=true
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+ProcSubset=pid
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+
+DeviceAllow=/dev/console
+DevicePolicy=closed
+
+PrivateIPC=true
+PrivateMounts=true
+PrivateNetwork=true
+PrivateTmp=true
+
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=tmpfs
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+ProtectSystem=strict
+
+#[Install] # guide
+#WantedBy=initrd.target

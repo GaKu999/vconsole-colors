@@ -1,0 +1,44 @@
+# vim:ft=systemd
+
+[Unit]
+Description=Virtual Console Colors Setup
+
+ConditionPathExists=/etc/vconsole.conf
+ConditionPathExists=/dev/tty0
+
+DefaultDependencies=no
+Before=sysinit.target
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/bin/vconsole-colors set /dev/tty0
+
+LockPersonality=true
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+ProcSubset=pid
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+
+DeviceAllow=/dev/tty0
+DevicePolicy=closed
+
+PrivateIPC=true
+PrivateMounts=true
+PrivateNetwork=true
+PrivateTmp=true
+
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=tmpfs
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+ProtectSystem=strict
+
+[Install]
+WantedBy=basic.target

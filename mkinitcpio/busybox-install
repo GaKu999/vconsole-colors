@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# vim:ft=bash:noet:ts=3:sw=3:
+
+build() {
+	add_binary setvtrgb
+	add_runscript
+
+	vconsole-colors parse >"$BUILDROOT/consolecolors.vtrgb"
+}
+
+help() {
+	local __help_text
+	IFS='' read -r -d '' __help_text <<ENDHELPTEXT
+This hook adds setvtrgb for console color setup during early userspace.
+ENDHELPTEXT
+	printf "%s" "$__help_text"
+}
