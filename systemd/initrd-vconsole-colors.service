@@ -1,4 +1,4 @@
-# vim:ft=systemd
+# vim:ft=systemd:
 
 [Unit]
 Description=Virtual Console Colors Setup
@@ -22,7 +22,7 @@ RestrictRealtime=true
 RestrictSUIDSGID=true
 SystemCallArchitectures=native
 
-DeviceAllow=/dev/console
+DeviceAllow=/dev/tty0
 DevicePolicy=closed
 
 PrivateIPC=true

@@ -1,4 +1,4 @@
-# vim:ft=systemd
+# vim:ft=systemd:
 
 [Unit]
 Description=Virtual Console Colors Setup
