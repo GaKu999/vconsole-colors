@@ -12,7 +12,7 @@ Before=sysinit.target
 [Service]
 Type=oneshot
 
-ExecStart=/usr/bin/vconsole-colors set /dev/tty0
+ExecStart=/usr/bin/vconsole-colors -E /etc/vconsole.conf set /dev/tty0
 
 LockPersonality=true
 MemoryDenyWriteExecute=true

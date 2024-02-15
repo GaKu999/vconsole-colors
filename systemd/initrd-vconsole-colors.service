@@ -3,7 +3,7 @@
 [Unit]
 Description=Virtual Console Colors Setup
 
-ConditionPathExists=/consolecolors.vtrgb
+ConditionPathExists=/etc/vconsole.vtrgb
 ConditionPathExists=/dev/tty0
 
 DefaultDependencies=no
@@ -12,7 +12,7 @@ Before=basic.target
 [Service]
 Type=oneshot
 
-ExecStart=/usr/bin/setvtrgb -C/dev/tty0 /consolecolors.vtrgb
+ExecStart=/usr/bin/setvtrgb -C/dev/tty0 /etc/vconsole.vtrgb
 
 LockPersonality=true
 MemoryDenyWriteExecute=true

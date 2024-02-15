@@ -5,7 +5,7 @@ build() {
 	add_binary setvtrgb
 	add_runscript
 
-	vconsole-colors parse >"$BUILDROOT/consolecolors.vtrgb"
+	vconsole-colors -E /etc/vconsole.conf parse >"$BUILDROOT/consolecolors.vtrgb"
 }
 
 help() {

@@ -6,6 +6,9 @@
 ## Who am I?
 _SELF="${0##*/}"
 
+## used by '_parse'
+_ENV_FILE="@ENV_FILE@" # TODO: make? meson?
+
 ## stdin: heredoc text
 _print_heredoc() {
 	local __heredoc_text __line
@@ -23,12 +26,14 @@ _usage() {
 	local __unknown_option="$2"
 	[ -n "$__unknown_option" ] && echo "$_SELF: invalid option -- '$__unknown_option'" >&2
 	_print_heredoc <<ENDUSAGETEXT
-Usage: $_SELF [OPERATION]
+Usage: $_SELF [ARG...] [OPERATION]
 
   OPERATIONS:
    get*
    parse
    set [CONSOLE]
+
+  -E --env-file FILE
 
   -h --help
   --usage
@@ -73,14 +78,18 @@ _get() {
 	done
 }
 
-## parse /etc/vconsole.conf into vtrgb
+## parse '$_ENV_FILE' into vtrgb
 _parse() {
 	local __i __j __c __rgb
 	local __r __g __b # read values
 	local __red __grn __blu # processed values
 	local IFS
 
-	[ -s /etc/vconsole.conf ] && . /etc/vconsole.conf
+	if [ -f "$_ENV_FILE" ]
+	then . "$_ENV_FILE"
+	else echo "$_SELF: $_ENV_FILE: No such file" >&2
+	fi
+
 	COLOR_0="${COLOR_0:-00,00,00}"
 	COLOR_1="${COLOR_1:-aa,00,00}"
 	COLOR_2="${COLOR_2:-00,aa,00}"
@@ -109,7 +118,7 @@ _parse() {
 			[ "$__j" -eq 1 ] && __grn="${__grn:-$(_hex2dec "$__c")}${__grn:+,$(_hex2dec "$__c")}"
 			[ "$__j" -eq 2 ] && __blu="${__blu:-$(_hex2dec "$__c")}${__blu:+,$(_hex2dec "$__c")}"
 			__j="$((__j + 1))"
-		done
+		done; unset -v IFS
 		__i="$((__i + 1))"
 	done
 	printf "%s\n" "$__red" "$__grn" "$__blu"
@@ -124,7 +133,7 @@ _set() {
 }
 
 ## $1: mode of operation (defaults to get)
-## $2: target tty for 'set' (defaults to current tty)
+## $2: target tty for '_set' (defaults to current tty)
 _main() {
 	local __mode="$1"
 	local __target_tty="${2:-$(tty)}"
@@ -149,6 +158,7 @@ _main() {
 while true
 do
 	case "$1" in
+	-E|--env-file) _ENV_FILE="$2"; shift 2 ;;
 	-h|--help|--usage) _usage ;;
 	-*|--*) _usage 2 "$1" ;;
 	--) shift; break ;;
