@@ -137,6 +137,7 @@ _set() {
 _main() {
 	local __mode="$1"
 	local __target_tty="${2:-$(tty)}"
+
 	case "$__mode" in
 	''|get) _get ;;
 	parse) _parse ;;
@@ -160,8 +161,8 @@ do
 	case "$1" in
 	-E|--env-file) _ENV_FILE="$2"; shift 2 ;;
 	-h|--help|--usage) _usage ;;
-	-*|--*) _usage 2 "$1" ;;
 	--) shift; break ;;
+	-*|--*) _usage 2 "$1" ;;
 	*) break ;;
 	esac
 done
