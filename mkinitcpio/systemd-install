@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # vim:ft=bash:noet:ts=3:sw=3:
 
-build() {
+function build {
 	add_systemd_unit initrd-vconsole-colors.service
 	add_symlink /usr/lib/systemd/system/initrd.target.wants/initrd-vconsole-colors.service ../initrd-vconsole-colors.service
 
-	vconsole-colors -E /etc/vconsole.conf parse >"$BUILDROOT/etc/vconsole.vtrgb"
+	vconsole-colors -E /etc/vconsole.conf parse > "$BUILDROOT/etc/vconsole.vtrgb"
 }
 
-help() {
-	local __help_text
-	IFS='' read -r -d '' __help_text <<ENDHELPTEXT
+function help {
+	local msg
+	IFS='' read -r -d '' msg << ENDHELPMSG
 This hook adds setvtrgb and the associated service for console color setup during early userspace.
-ENDHELPTEXT
-	printf "%s" "$__help_text"
+ENDHELPMSG
+	printf '%s' "$msg"
 }

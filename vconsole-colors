@@ -1,31 +1,29 @@
 #!/bin/sh
 # vim:ft=sh:noet:ts=3:sw=3:
 
-[ -n "$DEBUG" ] && set -x
+if [ -n "$DEBUG" ] ; then
+	set -x
+fi
 
-## Who am I?
+# Who am I?
 _SELF="${0##*/}"
 
-## used by '_parse'
-_ENV_FILE="@ENV_FILE@" # TODO: make? meson?
+# used by _parse()
+_ENV_FILE="@ENV_FILE@"
 
-## stdin: heredoc text
-_print_heredoc() {
-	local __heredoc_text __line
-	local __lfcr="$(printf "%b" "\012\015")"
-	while IFS="$__lfcr" read -r __line
-	do __heredoc_text="$__heredoc_text$__line$__lfcr"
+# stdin: heredoc text
+_herecat() {
+	local msg line lfcr
+	lfcr="$(printf '%b' "\012\015")"
+	while IFS="$lfcr" read -r line ; do
+		msg="$msg$line$lfcr"
 	done
-	printf "%s" "$__heredoc_text"
+	printf '%s' "$msg"
 }
 
-## $1: exit code (defaults to 0)
-## $2: unknown option
-_usage() {
-	local __exit_code="${1:-0}"
-	local __unknown_option="$2"
-	[ -n "$__unknown_option" ] && echo "$_SELF: invalid option -- '$__unknown_option'" >&2
-	_print_heredoc <<ENDUSAGETEXT
+# [$1: EXIT CODE (0)]
+_usage() { local ec="${1:-0}"
+	_herecat << ENDUSAGETEXT
 Usage: $_SELF [ARG...] [OPERATION]
 
   OPERATIONS:
@@ -38,8 +36,11 @@ Usage: $_SELF [ARG...] [OPERATION]
   -h --help
   --usage
 ENDUSAGETEXT
-	exit "$__exit_code"
+	exit "$ec"
 }
+
+#==============================================================================#
+# DEPRECATED/REWRITE
 
 ## $1: base16 value
 _hex2dec() {
@@ -132,30 +133,30 @@ _set() {
 	_parse | setvtrgb -C"$__target_tty" -
 }
 
-## $1: mode of operation (defaults to get)
-## $2: target tty for '_set' (defaults to current tty)
-_main() {
-	local __mode="$1"
-	local __target_tty="${2:-$(tty)}"
+# DEPRECATED/REWRITE END
+#==============================================================================#
 
-	case "$__mode" in
-	''|get) _get ;;
-	parse) _parse ;;
-	set)
-		if ! _set "$__target_tty"
-		then
-			echo "$_SELF: requires root privileges" >&2
-			exit 4
-		fi
-	;;
-	*)
-		echo "$_SELF: invalid mode of operation -- '$__mode'" >&2
-		_usage 2
-	;;
+
+# TODO: move opt parsing to main()
+# DEPRECATED: --env-file --help --usage
+main() { local mode="$1" target_tty="${2:-$(tty)}"
+	case "$mode" in
+		'' | get ) _get ;;
+		parse ) _parse ;;
+		set )
+			if ! _set "$target_tty" ; then
+				echo "$_SELF: requires root privileges" >&2
+				exit 4
+			fi
+		;;
+		*)
+			echo "$_SELF: invalid mode of operation -- '$mode'" >&2
+			_usage 2
+		;;
 	esac
 }
 
-## parse the options
+# parse the options
 while true
 do
 	case "$1" in
@@ -167,4 +168,4 @@ do
 	esac
 done
 
-_main "$@"
+main "$@"
