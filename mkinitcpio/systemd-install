@@ -5,7 +5,7 @@ function build {
 	add_systemd_unit initrd-vconsole-colors.service
 	add_symlink /usr/lib/systemd/system/initrd.target.wants/initrd-vconsole-colors.service ../initrd-vconsole-colors.service
 
-	vconsole-colors -E /etc/vconsole.conf parse > "$BUILDROOT/etc/vconsole.vtrgb"
+	vconsole-colors -E /etc/vconsole.conf get > "$BUILDROOT/etc/vconsole.vtrgb"
 }
 
 function help {
