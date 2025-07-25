@@ -15,7 +15,8 @@ function _usage { local ec="${1:-0}"
 Usage: $_SELF [-C CONSOLE] [-E FILE] [MODE]
 
   MODES:
-   get*       get the configured and current colors
+   show*      show the configured and current colors
+   get        get the configured colors
    set        set the colors
 
   -C CONSOLE  console to use
@@ -27,9 +28,9 @@ ENDUSAGEMSG
 	exit "$ec"
 }
 
-# get the configured and current colors
+# show the configured and current colors
 # $1: ENVFILE
-function _get { local -r envfile="$1"
+function _show { local -r envfile="$1"
 	local var value file ; local -a colors
 	if [[ -f "$envfile" ]] ; then
 		while IFS='=' read -r var value ; do
@@ -44,6 +45,33 @@ function _get { local -r envfile="$1"
 	fi
 	mapfile -t colors < <( getvtrgb | vtrgb2hex )
 	printf 'CURRENT: COLORS="%s"\n' "${colors[*]}"
+}
+
+# get the configured colors
+# $@: ENVFILE
+function _get { local -r envfile="$1"
+	local var value file s ; local -a colors
+	if [[ -f "$envfile" ]] ; then
+		while IFS='=' read -r var value ; do
+			if [[ "$var" == THEME ]] ; then
+				file="${value//\"/}"
+				if [[ -f "$file" ]] ; then
+					IFS='' read -r -d '' s < "$file"
+					printf '%s' "$s"
+				else
+					echo "$_SELF: $file: No such file" >&2
+					return 1
+				fi
+				break
+			elif [[ "$var" == COLORS ]] ; then
+				printf '%s\n' ${value//\"/}
+				break
+			fi
+		done < "$envfile"
+	else
+		echo "$_SELF: $envfile: No such file" >&2
+		return 1
+	fi
 }
 
 # set the colors
@@ -72,7 +100,7 @@ function _set { local -r envfile="$1" console="$2"
 	fi
 }
 
-# $@: [-C CONSOLE] [-E ENVFILE] [MODE (get)]
+# $@: [-C CONSOLE] [-E ENVFILE] [MODE (show)]
 function main {
 	local console envfile OPT OPTARG OPTIND
 	while getopts ':C:E:h' OPT ; do
@@ -92,6 +120,7 @@ function main {
 	done ; shift "$(( OPTIND - 1 ))" ; mode="$1"
 	: ${mode:=get}
 	case "$mode" in
+		show ) _show "${envfile:-@ENVFILE@}" ;;
 		get ) _get "${envfile:-@ENVFILE@}" ;;
 		set ) _set "${envfile:-@ENVFILE@}" "${console:-@TTY@}" ;;
 		* )
