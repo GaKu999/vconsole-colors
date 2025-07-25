@@ -118,7 +118,7 @@ function main {
 			;;
 		esac
 	done ; shift "$(( OPTIND - 1 ))" ; mode="$1"
-	: ${mode:=get}
+	: ${mode:=show}
 	case "$mode" in
 		show ) _show "${envfile:-@ENVFILE@}" ;;
 		get ) _get "${envfile:-@ENVFILE@}" ;;
