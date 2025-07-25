@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# vim:ft=sh:noet:ts=3:sw=3:
+
+# stdin: `cat /sys/module/vt/parameters/default_{red,grn,blu}`
+# SAMPLE:
+#  0,170,0,170,0,170,0,170,85,255,85,255,85,255,85,255
+#  0,0,170,85,0,0,170,170,85,85,255,255,85,85,255,255
+#  0,0,0,0,170,170,170,170,85,85,85,85,255,255,255,255
+function main {
+	local line ; local -i i offset=16 ; local -ai vtrgb vtint
+	while read -r line ; do
+		IFS=',' ; vtrgb=( $line ) ; unset -v IFS
+		for (( i=0 ; i < 16 ; i++ )) ; do
+			vtint[$i]="$(( ${vtint[$i]} + ( ${vtrgb[i]} << offset ) ))"
+		done
+		offset="$(( offset - 8 ))"
+	done
+	printf '#%.6X\n' "${vtint[@]}"
+} ; main

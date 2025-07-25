@@ -1,0 +1,15 @@
+#!/bin/sh
+# vim:ft=sh:noet:ts=3:sw=3:
+
+# stdout: `cat /sys/module/vt/parameters/default_{red,grn,blu}`
+# SAMPLE:
+#  0,170,0,170,0,170,0,170,85,255,85,255,85,255,85,255
+#  0,0,170,85,0,0,170,170,85,85,255,255,85,85,255,255
+#  0,0,0,0,170,170,170,170,85,85,85,85,255,255,255,255
+main() {
+	local line color
+	for color in red grn blu ; do
+		read -r line < "/sys/module/vt/parameters/default_$color"
+		printf '%s\n' "$line"
+	done
+} ; main
